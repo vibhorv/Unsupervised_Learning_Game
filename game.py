@@ -5,386 +5,1653 @@ import copy
 import timeit
 import random
 import sklearn
-from tempfile import TemporaryFile
 global PIL_background
 global trick
 global treat
 global bug_o
+global x_v
+global y_v
+global road
+global road2
+import os
+import pygame
+global coin
+global crash
 
 
-PIL_background=Image.open('grass.jpg')
-PIL_background=PIL_background.resize((1000,800), Image.ANTIALIAS)
-trick=Image.open('trick.png')
+
+
+
+PIL_background=Image.open('images/grass.jpg')
+PIL_background=PIL_background.resize((800,1000), Image.ANTIALIAS)
+
+road=Image.open('images/road.jpg')
+road=road.resize((400,1000), Image.ANTIALIAS)
+
+
+road2=Image.open('images/road2.jpg')
+road2=road2.resize((400,1000), Image.ANTIALIAS)
+
+
+trick=Image.open('images/trick.png')
 trick=trick.resize((100,100), Image.ANTIALIAS)
-treat=Image.open('treat.png')
-treat=treat.resize((100,100), Image.ANTIALIAS)
-bug_o=Image.open('bug.png')
-bug_o=bug_o.resize((100,100), Image.ANTIALIAS)
+
+gold=Image.open('images/gold.png')
+gold=gold.resize((100,100), Image.ANTIALIAS)
+
+bug_o=Image.open('images/car.png')
+bug_o=bug_o.resize((100,240), Image.ANTIALIAS)
+
+fire1=Image.open('images/fire1.png')
+fire1=fire1.resize((100,100), Image.ANTIALIAS)
+
+fire2=Image.open('images/fire2.png')
+fire2=fire2.resize((100,100), Image.ANTIALIAS)
+
+pygame.init()
+pygame.mixer.init()
+coinm = pygame.mixer.Sound('sounds/coin.wav')
+crash = pygame.mixer.Sound('sounds/crash.wav')
+
+
+x_v=80
+y_v=120
+
+def userplay() :
+	terminate_1=0
+	terminate=0
+	move_s=[]
+	point_c=0
+	Y=[]
+	move=0
+	obs_h=int(0)
+	obs_a=0
+	coin_c=0
+	coin=0
+	coin_m=0
+	pygame.init()
+	pygame.mixer.init()
+	ft=40
+	fire_timer=0
+	#coinm=pygame.mixer.music.load('coin.mp3')
+	#coinm = pygame.mixer.Sound('sounds/coin.wav')
 
 
 
+	flag_t1=0
+	flag_t2=0
+	flag_t3=0
+	flag_t4=0
+	flag_star=0
+
+	K=4
+	A=21
+
+	ux=200 + 100*int(random.random() * 4)
+	uy=760
+	pp=int(random.random() * 4)
+	if pp==1 :
+		flag_t1=1
+	if pp==2 :
+		flag_t2=1
+	if pp==3 :
+		flag_t3=1
+	if pp==0 :
+		flag_t4=1
 
 
-def play_user() :
-	move=1
-	point=0
-	ux=int(200+random.random() * 700) #rgggs
-	uy=int(100+random.random() * 600)
-	trtx=int(200+random.random() * 700)
-	trty=int(100+random.random() * 600)
-	trcx=int(200+random.random() * 700)
-	trcy=int(100+random.random() * 600)
-	reset=0
 
-	while(True):
+	t1x=200 
+	t1y=0
+
+	t2x=300 
+	t2y=0
+
+	t3x=400 
+	t3y=0
+
+	t4x=500 
+	t4y=0
+
+	rand_time= A + int(random.random() * K)
+	#X=np.zeros((1,1,y_v,x_v))
+	#move_s.append(0)
+	#Y.append(0.1)
+
+	i=0
+	while True:
+
+		i+=1
+		point=0.1
+
 		frame=PIL_background.copy()
+		if i%2 == 1 :
+			frame.paste(road, (200,0))
+		else :
+			frame.paste(road2, (200,0))
+
 		bug=bug_o.copy()
-		if move=='d':
-			uy+=30
-			bug = bug.rotate(180)
-		elif move=='u':
-			uy-=30		
-		elif move=='l':
-			ux+=30
-			bug = bug.rotate(270)
-		elif move=='r':
-			ux-=30
-			bug = bug.rotate(90)
+		if flag_t1==1 :
+			frame.paste(trick, (t1x,t1y),trick)
 
-		frame.paste(trick, (trcx,trcy),trick)
-		frame.paste(treat, (trtx,trty),treat)
+		if flag_t2==1 :
+			frame.paste(trick, (t2x,t2y),trick)
+
+		if flag_t3==1 :
+			frame.paste(trick, (t3x,t3y),trick)
+
+		if flag_t4==1 :
+			frame.paste(trick, (t4x,t4y),trick)
+
+		if flag_t1==-1 :
+			frame.paste(gold, (t1x,t1y),gold)
+
+		if flag_t2==-1 :
+			frame.paste(gold, (t2x,t2y),gold)
+
+		if flag_t3==-1 :
+			frame.paste(gold, (t3x,t3y),gold)
+
+		if flag_t4==-1 :
+			frame.paste(gold, (t4x,t4y),gold)
+
+
+		
 		frame.paste(bug, (ux,uy),bug)
+		#x2i=frame.resize((y_v,x_v),Image.ANTIALIAS)
+		#frame.paste(x2i, (600,0))
+		if fire_timer!=0 :
+			if (i/2)%2 == 1 :
+				frame.paste(fire1, (ux,uy-40),fire1)
+			else :
+				frame.paste(fire2, (ux,uy-40),fire2)
+
+
+		
 		frame= cv2.cvtColor(np.array(frame), cv2.COLOR_RGB2BGR)
-		if reset>100:
-			trtx=int(200+random.random() * 700)
-			trty=int(100+random.random() * 600)
-			trcx=int(200+random.random() * 700)
-			trcy=int(100+random.random() * 600)
-			reset=0
-
-
-
-		if abs(ux-trtx)<30 and abs(uy-trty)<30 :
-			trtx=int(200+random.random() * 700)
-			trty=int(100+random.random() * 600)
-			trcx=int(200+random.random() * 700)
-			trcy=int(100+random.random() * 600)
-			reset=0
-			point+=100
-
-		if abs(ux-trcx)<30 and abs(uy-trcy)<30 :
-			trtx=int(200+random.random() * 700)
-			trty=int(100+random.random() * 600)
-			trcx=int(200+random.random() * 700)
-			trcy=int(100+random.random() * 600)
-			reset=0
-			point-=100
-
-
-
-
-		if ux<0 or ux>1024:
-			print 'Game Ends'
-			break
-		elif uy<0 or uy>800:
-			print  'Game Ends'
-			break
-
-
-
-
+		#x2i= cv2.cvtColor(np.array(x2i), cv2.COLOR_BGR2GRAY)
+		#print x2i.shape
+		#xi=np.reshape(x2i,(1,1,y_v,x_v))
+		#val=int(point)
 		font = cv2.FONT_HERSHEY_SIMPLEX
-		cv2.putText(frame,'Score :  ' +str(point),(10,50), font, 1,(255,255,255),2)
-		cv2.imshow('grass',frame)
+
+		#qval=model.predict_on_batch(xi)
+		#move=np.argmax(qval)-1
+		
+		#X=np.concatenate((X,xi),axis=0)
+		#move_s.append(move)
+		cv2.putText(frame,'Time:' +str(i) ,(10,30), font, 1,(255,255,255),2)
+		cv2.putText(frame,'Score : '+ str(point_c) +' Move:' +str(move) ,(10,60), font, 1,(0,255,255),2)
+		cv2.putText(frame,'Obstacle avoided :'+ str(obs_a) + '/' + str(obs_a+obs_h) + ' Obstacle Hitted :' + str(obs_h) + '/' + str(obs_a+obs_h) ,(10,90), font, 1,(255,0,255),2)
+		cv2.putText(frame,'Coin collected :'+ str(coin_c) + '/' + str(coin)  +' Coin Missed :'+ str(coin_m) + '/' + str(coin) ,(10,120), font, 1,(255,255,0),2)
+		#cv2.putText(frame,'Current Reward: ' + str(point) ,(10,150), font, 1,(255,0,0),2)
+
+
+
+		cv2.imshow('Gold Rush',frame)
+		
+
+
+		#print qval, move, 
+		if move==1 :
+			ux+=100
+		if move==-1 :
+			ux-=100
+			
+
+		if ux<200 :
+			terminate=1
+			point=-100
+		elif ux>500 :
+			terminate=1
+			point=-100
+			
 	
-		val=int(point)
-		reset+=1
-		k=cv2.waitKey(100)
+		if abs(flag_t1)==1 :
+			t1y=t1y+20
+
+		if abs(flag_t2)==1 :
+			t2y=t2y+20
+
+		if abs(flag_t3)==1 :
+			t3y=t3y+20
+
+		if abs(flag_t4)==1 :
+			t4y=t4y+20
+
+
+		if abs(flag_t1)==1 :
+			if abs(ux-t1x)<100 :
+				if (uy-t1y)<100 and (t1y-uy)<=0 :
+					#print '21'
+					#terminate=int( 0.5 + 0.5*(flag_t1) )
+					point= -75*flag_t1 + 25
+					if flag_t1==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t1==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t1=0
+					t1y=0
+					
+				
+
+				if (t1y-uy)<240 and (uy-t1y)<=0 :
+					#print '22'
+					#terminate=int( 0.5 + 0.5*(flag_t1) )
+					point= -75*flag_t1 + 25
+					if flag_t1==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t1==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t1=0
+					t1y=0
+
+
+
+		if abs(flag_t2)==1 :
+			if abs(ux-t2x)<100 :
+				if (uy-t2y)<100 and (t2y-uy)<=0 :
+					#print '21'
+					#terminate=int( 0.5 + 0.5*(flag_t2) )
+					point= -75*flag_t2 + 25
+					if flag_t2==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t2==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t2=0
+					t2y=0
+
+				if (t2y-uy)<240 and (uy-t2y)<=0 :
+					#print '22'
+					#terminate=int( 0.5 + 0.5*(flag_t2) )
+					point= -75*flag_t2 + 25
+					if flag_t2==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t2==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t2=0
+					t2y=0
+
+
+		if abs(flag_t3)==1 :
+			if abs(ux-t3x)<100 :
+				if (uy-t3y)<100 and (t3y-uy)<=0 :
+					#print '21'
+					#terminate= int( 0.5 + 0.5*(flag_t3) )
+					point= -75*flag_t3 + 25	
+					if flag_t3==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t3==1 :
+						obs_h+=1
+						fire_timer=14
+						crash.play()
+					flag_t3=0
+					t3y=0
+
+
+				if (t3y-uy)<240 and (uy-t3y)<=0 :
+					#print '22'
+					#terminate=int( 0.5 + 0.5*(flag_t3) )
+					point= -75*flag_t3 + 25
+					if flag_t3==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t3==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t3=0
+					t3y=0
+
+
+		if abs(flag_t4)==1 :
+			if abs(ux-t4x)<100 :
+				if (uy-t4y)<100 and (t4y-uy)<=0 :
+					#print '21'
+					#terminate=int( 0.5 + 0.5*(flag_t4) )
+					point= -75*flag_t4 + 25
+					if flag_t4==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t4==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t4=0
+					t4y=0
+
+
+				if (t4y-uy)<240 and (uy-t4y)<=0 :
+					#print '22'
+					#terminate=int( 0.5 + 0.5*(flag_t4) )
+					point= -75*flag_t4 + 25
+					if flag_t4==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t4==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t4=0
+					t4y=0
+
+			
+			
+
+		if abs(flag_t1)==1 :
+			if t1y>1000 :
+				if (flag_t1)==-1:
+					point=-40
+					coin_m+=1
+				if flag_t1==1 :
+					obs_a+=1
+				t1y=0
+				flag_t1=0
+				
+
+		if abs(flag_t2)==1 :
+			if t2y>1000 :
+				if (flag_t2)==-1:
+					point=-40
+					coin_m+=1
+				if flag_t2==1 :
+					obs_a+=1
+				t2y=0
+				flag_t2=0
+				
+
+		if abs(flag_t3)==1 :
+			if t3y>1000 :
+				if (flag_t3)==-1:
+					point=-40
+					coin_m+=1
+				if flag_t3==1 :
+					obs_a+=1
+				t3y=0
+				flag_t3=0
+				
+
+		if abs(flag_t4)==1 :
+			if t4y>1000 :
+				if (flag_t4)==-1:
+					point=-40
+					coin_m+=1
+				if flag_t4==1 :
+					obs_a+=1
+				t4y=0
+				flag_t4=0
+				
+		
+
+		if abs(flag_t1)==1 :
+			if rand_time==0 :
+				probabilty=int(random.random()*3)
+				if flag_t3==0 and probabilty==0 :
+					flag_t3=1
+					rand_time= A + int(random.random() * K)
+				if flag_t2==0 and probabilty==1 :
+					flag_t2=1
+					rand_time= A + int(random.random() * K)
+				if flag_t4==0 and probabilty==2 :
+					flag_t4=1
+					rand_time= A + int(random.random() * K)
+
+		if abs(flag_t2)==1 :
+			if rand_time==0 :
+				probabilty=int(random.random()*3)
+				if flag_t3==0 and probabilty==0 :
+					flag_t3=1
+					rand_time= A + int(random.random() * K)
+				if flag_t1==0 and probabilty==1 :
+					flag_t1=1
+					rand_time= A + int(random.random() * K)
+				if flag_t4==0 and probabilty==2 :
+					flag_t4=1
+					rand_time= A + int(random.random() * K)
+
+
+		if abs(flag_t3)==1 :
+			if rand_time==0 :
+				probabilty=int(random.random()*3)
+				if flag_t1==0 and probabilty==0 :
+					flag_t1=1
+					rand_time= A + int(random.random() * K)
+				if flag_t2==0 and probabilty==1 :
+					flag_t2=1
+					rand_time= A + int(random.random() * K)
+				if flag_t4==0 and probabilty==2 :
+					flag_t4=1
+					rand_time= A + int(random.random() * K)
+
+		if abs(flag_t4)==1 :
+			if rand_time==0 :
+				probabilty=int(random.random()*3)
+				if flag_t3==0 and probabilty==0 :
+					flag_t3=1
+					rand_time= A + int(random.random() * K)
+				if flag_t2==0 and probabilty==1 :
+					flag_t2=1
+					rand_time= A + int(random.random() * K)
+				if flag_t1==0 and probabilty==2 :
+					flag_t1=1
+					rand_time= A + int(random.random() * K)
+
+
+		if flag_star==0 :
+			prop_star = int(random.random() * 4)
+			if prop_star==0:
+				flag_star=1
+				n = 1 + int(random.random() * 4)
+				if n==1 and flag_t1==0:
+					flag_t1=-1
+					coin+=1
+				if n==2 and flag_t2==0:
+					flag_t2=-1
+					coin+=1
+				if n==3 and flag_t3==0:
+					flag_t3=-1
+					coin+=1
+				if n==4 and flag_t4==0:
+					flag_t4=-1
+					coin+=1
+
+		if flag_t1!=-1 and flag_t2!=-1 and flag_t3!=-1 and  flag_t4!=-1 :
+			flag_star=0
+
+
+
+		if flag_t1==0 and flag_t2==0 and flag_t3==0 and flag_t4==0 :
+			pp=int(random.random() * 4)
+			obs+=1
+			if pp==1 :
+				flag_t1=1
+			if pp==2 :
+				flag_t2=1
+			if pp==3 :
+				flag_t3=1
+			if pp==0 :
+				flag_t4=1
+			rand_time= A + int(random.random() * K)
+
+
+
+
+		if rand_time !=0 :
+			rand_time-=1
+		
+
+		#Y.append(point)
+		point_c+=point
+		print point
+		
+		if(abs(point_c)>3000):
+			terminate=1
+
+		k=cv2.waitKey(10)
 		if k==27:
 			break
-		elif k==-1: 
-			continue
-		elif k==63232 and move!='u':
-			move='u'
-			moveint=1
-		elif k==63233 and move!='d':
-			move='d'
-			moveint=2
-		elif k==63234 and move!='r':
-			move='r'
-			moveint=3
-		elif k==63235 and move!='l':
-			move='l'
-			moveint=4
-
-	cv2.destroyAllWindows()
-
-def state(Display,model) :
-	
-	ux=int(200+random.random() * 700)
-	uy=int(100+random.random() * 600)
-	trtx=int(200+random.random() * 700)
-	trty=int(100+random.random() * 600)
-	trcx=int(200+random.random() * 700)
-	trcy=int(100+random.random() * 600)
-	reset=0
-	point=0
-	#loading model
-	#starting model
-	#Code goes here
-	x=np.zeros((1,6))
-	x[0,0]=ux
-	x[0,1]=uy
-	x[0,2]=trtx
-	x[0,3]=trty
-	x[0,4]=trcx
-	x[0,5]=trcy
-	X=x
-	while (True):
-		frame=PIL_background.copy()
-		bug=bug_o.copy()
-		if reset==50 :
-			reset-=1
-			break
-		x[0,0]=ux+30
-		x[0,1]=uy
-		x[0,2]=trtx
-		x[0,3]=trty
-		x[0,4]=trcx
-		x[0,5]=trcy
-		qval_px1=model.predict_on_batch(x)
-		val=qval_px1
-		maxq=1
-		x[0,0]=ux-30
-		x[0,1]=uy
-		x[0,2]=trtx
-		x[0,3]=trty
-		x[0,4]=trcx
-		x[0,5]=trcy
-		qval_nx1=model.predict_on_batch(x) 
-		if val < qval_nx1 :
-			maxq=-1
-			val=qval_nx1
-		x[0,0]=ux
-		x[0,1]=uy+30
-		x[0,2]=trtx
-		x[0,3]=trty
-		x[0,4]=trcx
-		x[0,5]=trcy
-		qval_py1=model.predict_on_batch(x)
-		if val < qval_py1 :
-			maxq=2
-			val=qval_py1 
-		x[0,0]=ux
-		x[0,1]=uy-30
-		x[0,2]=trtx
-		x[0,3]=trty
-		x[0,4]=trcx
-		x[0,5]=trcy
-		qval_ny1=model.predict_on_batch(x)
-		if val < qval_ny1 :
-			maxq=-2
-			val=qval_ny1
-
-		if (maxq%2)==0 :
-			uy=uy + maxq*15
+		elif k== -1 :
+			move=0
+		elif k== 63235 :
+			move=1
+		elif k== 63234 :
+			move=-1	
 		else :
-			ux=ux + maxq*30
-
-		x[0,0]=ux
-		x[0,1]=uy
-		x[0,2]=trtx
-		x[0,3]=trty
-		x[0,4]=trcx
-		x[0,5]=trcy
-		X=np.vstack((X,x))
-		#input data              												work left here
-		if maxq==2:
-			bug = bug.rotate(180)
-		elif maxq==1:
-			bug = bug.rotate(270)
-		elif maxq==-1:
-			bug = bug.rotate(90)
-
-		if abs(ux-trtx)<30 and abs(uy-trty)<30 :
-			point=100
-			break
-
-		if abs(ux-trcx)<30 and abs(uy-trcy)<30 :
-			point=-100
-			break
-
-		if ux<40 :
-			ux=960
-		if ux>1024:
-			ux=40
-
-		if uy<40 :
-			uy=760
-		if uy>760:
-			uy=40
+			print k
 		
-		reset+=1
-		if Display==True :
-			
-			frame.paste(trick, (trcx,trcy),trick)
-			frame.paste(treat, (trtx,trty),treat)
+
+
+		if terminate==1 :
+			break
+	cv2.destroyAllWindows()
+	if point_c<3000 :
+		j=0
+		while j<500 :
+			frame=PIL_background.copy()
+			frame.paste(road, (200,0))
+			bug=bug_o.copy()
+			if flag_t1==1 :
+				frame.paste(trick, (t1x,t1y),trick)
+
+			if flag_t2==1 :
+				frame.paste(trick, (t2x,t2y),trick)
+
+			if flag_t3==1 :
+				frame.paste(trick, (t3x,t3y),trick)
+
+			if flag_t4==1 :
+				frame.paste(trick, (t4x,t4y),trick)
+
+			if flag_t1==-1 :
+				frame.paste(gold, (t1x,t1y),gold)
+
+			if flag_t2==-1 :
+				frame.paste(gold, (t2x,t2y),gold)
+
+			if flag_t3==-1 :
+				frame.paste(gold, (t3x,t3y),gold)
+
+			if flag_t4==-1 :
+				frame.paste(gold, (t4x,t4y),gold)
+
+
+		
 			frame.paste(bug, (ux,uy),bug)
+		
+
 			frame= cv2.cvtColor(np.array(frame), cv2.COLOR_RGB2BGR)
 			font = cv2.FONT_HERSHEY_SIMPLEX
-			cv2.putText(frame,'Score :  ' +str(point),(10,50), font, 1,(255,255,255),2)
-			cv2.imshow('The Wasp Hunt',frame)
-
-		k=cv2.waitKey(100)
-		if k==27:
-			break
-		elif k==-1: 
-			continue
-
-		cv2.destroyAllWindows()
-
-
-	return X,point,reset
 
 		
+			cv2.putText(frame,'Time:' +str(i) ,(10,30), font, 1,(255,255,255),2)
+			cv2.putText(frame,'Score : '+ str(point_c) +' Move:' +str(move) ,(10,60), font, 1,(0,255,255),2)
+			cv2.putText(frame,'Obstacle avoided :'+ str(obs_a) + '/' + str(obs_a+obs_h) + ' Obstacle Hitted :' + str(obs_h) + '/' + str(obs_a+obs_h) ,(10,90), font, 1,(255,0,255),2)
+			cv2.putText(frame,'Coin collected :'+ str(coin_c) + '/' + str(coin)  +' Coin Missed :'+ str(coin_m) + '/' + str(coin) ,(10,120), font, 1,(255,255,0),2)
+			cv2.putText(frame,'Toatled' ,(100,500), font, 6,(0,0,255),8)
+			j+=1
+			cv2.imshow('Gold Rush',frame)
 
-def get_reward_fx(point,reset_state,gamma) :
-	temp_reward=float(point)
-	init_reward=point*pow(gamma,reset_state+1)
-	Y=[]
-	reward=init_reward
-	for i in range(0,reset_state+2) :
-		Y.append(reward)
-		reward=reward/gamma
-	return np.array(Y)
+			k=cv2.waitKey(50)
+			if k==27:
+				break
+			cv2.destroyAllWindows()
+	else :
+		j=0
+		while j<200 :
+			frame=PIL_background.copy()
+			frame.paste(road, (200,0))
+			bug=bug_o.copy()
+			if flag_t1==1 :
+				frame.paste(trick, (t1x,t1y),trick)
+
+			if flag_t2==1 :
+				frame.paste(trick, (t2x,t2y),trick)
+
+			if flag_t3==1 :
+				frame.paste(trick, (t3x,t3y),trick)
+
+			if flag_t4==1 :
+				frame.paste(trick, (t4x,t4y),trick)
+
+			if flag_t1==-1 :
+				frame.paste(gold, (t1x,t1y),gold)
+
+			if flag_t2==-1 :
+				frame.paste(gold, (t2x,t2y),gold)
+
+			if flag_t3==-1 :
+				frame.paste(gold, (t3x,t3y),gold)
+
+			if flag_t4==-1 :
+				frame.paste(gold, (t4x,t4y),gold)
+
+
+		
+			frame.paste(bug, (ux,uy),bug)
+		
+
+			frame= cv2.cvtColor(np.array(frame), cv2.COLOR_RGB2BGR)
+			font = cv2.FONT_HERSHEY_SIMPLEX
+
+		
+			cv2.putText(frame,'Time:' +str(i) ,(10,30), font, 1,(255,255,255),2)
+			cv2.putText(frame,'Score : '+ str(point_c) +' Move:' +str(move) ,(10,60), font, 1,(0,255,255),2)
+			cv2.putText(frame,'Obstacle avoided :'+ str(obs_a) + '/' + str(obs_a+obs_h) + ' Obstacle Hitted :' + str(obs_h) + '/' + str(obs_a+obs_h) ,(10,90), font, 1,(255,0,255),2)
+			cv2.putText(frame,'Coin collected :'+ str(coin_c) + '/' + str(coin)  +' Coin Missed :'+ str(coin_m) + '/' + str(coin) ,(10,120), font, 1,(255,255,0),2)
+			cv2.putText(frame,'Victory' ,(100,500), font, 6,(0,255,0),8)
+			j+=1
+			cv2.imshow('Gold Rush',frame)
+			k=cv2.waitKey(50)
+			if k==27:
+				break
+			cv2.destroyAllWindows()
+
+
+	return 0
 
 
 def play(model) :
+	terminate_1=0
+	terminate=0
+	#move_s=[]
+	point_c=0
+	#Y=[]
+	move=0
+	obs_h=int(0)
+	
+	obs_a=0
+	coin_c=0
+	coin=0
+	coin_m=0
+	
+	#coinm=pygame.mixer.music.load('coin.mp3')
 
-	point=0
-	ux=int(200+random.random() * 700)
-	uy=int(100+random.random() * 600)
 
-	trtx=int(200+random.random() * 700)
-	trty=int(100+random.random() * 600)
 
-	trcx=int(200+random.random() * 700)
-	trcy=int(100+random.random() * 600)
-	reset=0
 
-	x=np.zeros((1,6))
-	x[0,0]=ux
-	x[0,1]=uy
-	x[0,2]=trtx
-	x[0,3]=trty
-	x[0,4]=trcx
-	x[0,5]=trcy
-	while(True):
-		if reset==100 :
-			break
-		x[0,0]=ux+30
-		x[0,1]=uy
-		x[0,2]=trtx
-		x[0,3]=trty
-		x[0,4]=trcx
-		x[0,5]=trcy
-		qval_px1=model.predict_on_batch(x)
-		val=qval_px1
-		maxq=1
-		x[0,0]=ux-30
-		x[0,1]=uy
-		x[0,2]=trtx
-		x[0,3]=trty
-		x[0,4]=trcx
-		x[0,5]=trcy
-		qval_nx1=model.predict_on_batch(x) 
-		if val < qval_nx1 :
-			maxq=-1
-			val=qval_nx1
-		x[0,0]=ux
-		x[0,1]=uy+30
-		x[0,2]=trtx
-		x[0,3]=trty
-		x[0,4]=trcx
-		x[0,5]=trcy
-		qval_py1=model.predict_on_batch(x)
-		if val < qval_py1 :
-			maxq=2
-			val=qval_py1 
-		x[0,0]=ux
-		x[0,1]=uy-30
-		x[0,2]=trtx
-		x[0,3]=trty
-		x[0,4]=trcx
-		x[0,5]=trcy
-		qval_ny1=model.predict_on_batch(x)
-		if val < qval_ny1 :
-			maxq=-2
-			val=qval_ny1
+	flag_t1=0
+	flag_t2=0
+	flag_t3=0
+	flag_t4=0
+	flag_star=0
+	ft=40
+	fire_timer=0
 
-		if (maxq%2)==0 :
-			uy=uy + maxq*15
+	K=4
+	A=21
+
+	ux=200 + 100*int(random.random() * 4)
+	uy=760
+	pp=int(random.random() * 4)
+	if pp==1 :
+		flag_t1=1
+	if pp==2 :
+		flag_t2=1
+	if pp==3 :
+		flag_t3=1
+	if pp==0 :
+		flag_t4=1
+
+
+
+	t1x=200 
+	t1y=0
+
+	t2x=300 
+	t2y=0
+
+	t3x=400 
+	t3y=0
+
+	t4x=500 
+	t4y=0
+
+	rand_time= A + int(random.random() * K)
+	#X=np.zeros((1,1,y_v,x_v))
+	#move_s.append(0)
+	#Y.append(0.1)
+
+	i=0
+	while True:
+
+		i+=1
+		point=0.1
+
+		frame=PIL_background.copy()
+		if i%2 == 1 :
+			frame.paste(road, (200,0))
 		else :
-			ux=ux + maxq*30
+			frame.paste(road2, (200,0))
 
-		if maxq==2:
-			bug = bug.rotate(180)		
-		elif maxq==1:
-			bug = bug.rotate(270)
-		elif maxq==-1:
-			bug = bug.rotate(90)
+		bug=bug_o.copy()
+		if flag_t1==1 :
+			frame.paste(trick, (t1x,t1y),trick)
 
-		frame.paste(trick, (trcx,trcy),trick)
-		frame.paste(treat, (trtx,trty),treat)
-		frame.paste(bug, (ux,uy),bug)
-		frame= cv2.cvtColor(np.array(frame), cv2.COLOR_RGB2BGR)
+		if flag_t2==1 :
+			frame.paste(trick, (t2x,t2y),trick)
 
-		if reset>100:
-			trtx=int(200+random.random() * 700)
-			trty=int(100+random.random() * 600)
-			trcx=int(200+random.random() * 700)
-			trcy=int(100+random.random() * 600)
-			reset=0
+		if flag_t3==1 :
+			frame.paste(trick, (t3x,t3y),trick)
+
+		if flag_t4==1 :
+			frame.paste(trick, (t4x,t4y),trick)
+
+		if flag_t1==-1 :
+			frame.paste(gold, (t1x,t1y),gold)
+
+		if flag_t2==-1 :
+			frame.paste(gold, (t2x,t2y),gold)
+
+		if flag_t3==-1 :
+			frame.paste(gold, (t3x,t3y),gold)
+
+		if flag_t4==-1 :
+			frame.paste(gold, (t4x,t4y),gold)
 
 
-
-		if abs(ux-trtx)<60 and abs(uy-trty)<60 :
-			trtx=int(200+random.random() * 700)
-			trty=int(100+random.random() * 600)
-			trcx=int(200+random.random() * 700)
-			trcy=int(100+random.random() * 600)
-			reset=0
-			point+=100
-
-		if abs(ux-trcx)<60 and abs(uy-trcy)<60 :
-			trtx=int(200+random.random() * 700)
-			trty=int(100+random.random() * 600)
-			trcx=int(200+random.random() * 700)
-			trcy=int(100+random.random() * 600)
-			reset=0
-			point-=100
-
-		if ux<40 :
-			ux=960
-		if ux>1024:
-			ux=40
-
-		if uy<40 :
-			uy=760
-		if uy>760:
-			uy=40
 		
-		reset+=1
-		font = cv2.FONT_HERSHEY_SIMPLEX
-		cv2.putText(frame,'Score :  ' +str(point),(10,50), font, 1,(255,255,255),2)
-		cv2.imshow('The Wasp Hunt',frame)
+		frame.paste(bug, (ux,uy),bug)
+		x2i=frame.resize((y_v,x_v),Image.ANTIALIAS)
+		frame.paste(x2i, (600,0))
+		if fire_timer!=0 :
+			if (i/2)%2 == 1 :
+				frame.paste(fire1, (ux,uy-40),fire1)
+			else :
+				frame.paste(fire2, (ux,uy-40),fire2)
 
-		k=cv2.waitKey(100)
+		frame= cv2.cvtColor(np.array(frame), cv2.COLOR_RGB2BGR)
+		x2i= cv2.cvtColor(np.array(x2i), cv2.COLOR_BGR2GRAY)
+		#print x2i.shape
+		xi=np.reshape(x2i,(1,1,y_v,x_v))
+		#val=int(point)
+		font = cv2.FONT_HERSHEY_SIMPLEX
+
+		qval=model.predict_on_batch(xi)
+		move=np.argmax(qval)-1
+		
+		#X=np.concatenate((X,xi),axis=0)
+		#move_s.append(move)
+		cv2.putText(frame,'Time:' +str(i) ,(10,30), font, 1,(255,255,255),2)
+		cv2.putText(frame,'Score : '+ str(point_c) +' Move:' +str(move) ,(10,60), font, 1,(0,255,255),2)
+		cv2.putText(frame,'Obstacle avoided :'+ str(obs_a) + '/' + str(obs_a+obs_h) + ' Obstacle Hitted :' + str(obs_h) + '/' + str(obs_a+obs_h) ,(10,90), font, 1,(255,0,255),2)
+		cv2.putText(frame,'Coin collected :'+ str(coin_c) + '/' + str(coin)  +' Coin Missed :'+ str(coin_m) + '/' + str(coin) ,(10,120), font, 1,(255,255,0),2)
+		#cv2.putText(frame,'Current Reward: ' + str(point) ,(10,150), font, 1,(255,0,0),2)
+		#cv2.putText(frame,'Toatled' ,(100,500), font, 6,(0,0,255),8)
+
+		cv2.imshow('Gold Rush',frame)
+		
+
+
+		print qval, move, 
+		if move==1 :
+			ux+=100
+		if move==-1 :
+			ux-=100
+			
+
+		if ux<200 :
+			terminate=1
+			point=-100
+		elif ux>500 :
+			terminate=1
+			point=-100
+			
+	
+		if abs(flag_t1)==1 :
+			t1y=t1y+20
+
+		if abs(flag_t2)==1 :
+			t2y=t2y+20
+
+		if abs(flag_t3)==1 :
+			t3y=t3y+20
+
+		if abs(flag_t4)==1 :
+			t4y=t4y+20
+
+
+		if abs(flag_t1)==1 :
+			if abs(ux-t1x)<100 :
+				if (uy-t1y)<100 and (t1y-uy)<=0 :
+					#print '21'
+					#terminate=int( 0.5 + 0.5*(flag_t1) )
+					point= -75*flag_t1 + 25
+					if flag_t1==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t1==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t1=0
+					t1y=0
+					
+				
+
+				if (t1y-uy)<240 and (uy-t1y)<=0 :
+					#print '22'
+					#terminate=int( 0.5 + 0.5*(flag_t1) )
+					point= -75*flag_t1 + 25
+					if flag_t1==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t1==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t1=0
+					t1y=0
+
+
+
+		if abs(flag_t2)==1 :
+			if abs(ux-t2x)<100 :
+				if (uy-t2y)<100 and (t2y-uy)<=0 :
+					#print '21'
+					#terminate=int( 0.5 + 0.5*(flag_t2) )
+					point= -75*flag_t2 + 25
+					if flag_t2==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t2==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t2=0
+					t2y=0
+
+				if (t2y-uy)<240 and (uy-t2y)<=0 :
+					#print '22'
+					#terminate=int( 0.5 + 0.5*(flag_t2) )
+					point= -75*flag_t2 + 25
+					if flag_t2==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t2==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t2=0
+					t2y=0
+
+
+		if abs(flag_t3)==1 :
+			if abs(ux-t3x)<100 :
+				if (uy-t3y)<100 and (t3y-uy)<=0 :
+					#print '21'
+					#terminate= int( 0.5 + 0.5*(flag_t3) )
+					point= -75*flag_t3 + 25	
+					if flag_t3==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t3==1 :
+						obs_h+=1
+						fire_timer=14
+						crash.play()
+					flag_t3=0
+					t3y=0
+
+
+				if (t3y-uy)<240 and (uy-t3y)<=0 :
+					#print '22'
+					#terminate=int( 0.5 + 0.5*(flag_t3) )
+					point= -75*flag_t3 + 25
+					if flag_t3==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t3==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t3=0
+					t3y=0
+
+
+		if abs(flag_t4)==1 :
+			if abs(ux-t4x)<100 :
+				if (uy-t4y)<100 and (t4y-uy)<=0 :
+					#print '21'
+					#terminate=int( 0.5 + 0.5*(flag_t4) )
+					point= -75*flag_t4 + 25
+					if flag_t4==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t4==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t4=0
+					t4y=0
+
+
+				if (t4y-uy)<240 and (uy-t4y)<=0 :
+					#print '22'
+					#terminate=int( 0.5 + 0.5*(flag_t4) )
+					point= -75*flag_t4 + 25
+					if flag_t4==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t4==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t4=0
+					t4y=0
+
+			
+
+		if abs(flag_t1)==1 :
+			if t1y>1000 :
+				if (flag_t1)==-1:
+					point=-40
+					coin_m+=1
+				if flag_t1==1 :
+					obs_a+=1
+				t1y=0
+				flag_t1=0
+				
+
+		if abs(flag_t2)==1 :
+			if t2y>1000 :
+				if (flag_t2)==-1:
+					point=-40
+					coin_m+=1
+				if flag_t2==1 :
+					obs_a+=1
+				t2y=0
+				flag_t2=0
+				
+
+		if abs(flag_t3)==1 :
+			if t3y>1000 :
+				if (flag_t3)==-1:
+					point=-40
+					coin_m+=1
+				if flag_t3==1 :
+					obs_a+=1
+				t3y=0
+				flag_t3=0
+				
+
+		if abs(flag_t4)==1 :
+			if t4y>1000 :
+				if (flag_t4)==-1:
+					point=-40
+					coin_m+=1
+				if flag_t4==1 :
+					obs_a+=1
+				t4y=0
+				flag_t4=0
+				
+		
+
+		if abs(flag_t1)==1 :
+			if rand_time==0 :
+				probabilty=int(random.random()*3)
+				if flag_t3==0 and probabilty==0 :
+					flag_t3=1
+					rand_time= A + int(random.random() * K)
+				if flag_t2==0 and probabilty==1 :
+					flag_t2=1
+					rand_time= A + int(random.random() * K)
+				if flag_t4==0 and probabilty==2 :
+					flag_t4=1
+					rand_time= A + int(random.random() * K)
+
+		if abs(flag_t2)==1 :
+			if rand_time==0 :
+				probabilty=int(random.random()*3)
+				if flag_t3==0 and probabilty==0 :
+					flag_t3=1
+					rand_time= A + int(random.random() * K)
+				if flag_t1==0 and probabilty==1 :
+					flag_t1=1
+					rand_time= A + int(random.random() * K)
+				if flag_t4==0 and probabilty==2 :
+					flag_t4=1
+					rand_time= A + int(random.random() * K)
+
+
+		if abs(flag_t3)==1 :
+			if rand_time==0 :
+				probabilty=int(random.random()*3)
+				if flag_t1==0 and probabilty==0 :
+					flag_t1=1
+					rand_time= A + int(random.random() * K)
+				if flag_t2==0 and probabilty==1 :
+					flag_t2=1
+					rand_time= A + int(random.random() * K)
+				if flag_t4==0 and probabilty==2 :
+					flag_t4=1
+					rand_time= A + int(random.random() * K)
+
+		if abs(flag_t4)==1 :
+			if rand_time==0 :
+				probabilty=int(random.random()*3)
+				if flag_t3==0 and probabilty==0 :
+					flag_t3=1
+					rand_time= A + int(random.random() * K)
+				if flag_t2==0 and probabilty==1 :
+					flag_t2=1
+					rand_time= A + int(random.random() * K)
+				if flag_t1==0 and probabilty==2 :
+					flag_t1=1
+					rand_time= A + int(random.random() * K)
+
+
+		if flag_star==0 :
+			prop_star = int(random.random() * 4)
+			if prop_star==0:
+				flag_star=1
+				n = 1 + int(random.random() * 4)
+				if n==1 and flag_t1==0:
+					flag_t1=-1
+					coin+=1
+				if n==2 and flag_t2==0:
+					flag_t2=-1
+					coin+=1
+				if n==3 and flag_t3==0:
+					flag_t3=-1
+					coin+=1
+				if n==4 and flag_t4==0:
+					flag_t4=-1
+					coin+=1
+
+		if flag_t1!=-1 and flag_t2!=-1 and flag_t3!=-1 and  flag_t4!=-1 :
+			flag_star=0
+
+
+
+		if flag_t1==0 and flag_t2==0 and flag_t3==0 and flag_t4==0 :
+			pp=int(random.random() * 4)
+			obs+=1
+			if pp==1 :
+				flag_t1=1
+			if pp==2 :
+				flag_t2=1
+			if pp==3 :
+				flag_t3=1
+			if pp==0 :
+				flag_t4=1
+			rand_time= A + int(random.random() * K)
+
+
+
+
+		if rand_time !=0 :
+			rand_time-=1
+		
+		if fire_timer !=0 :
+			fire_timer-=1
+
+		#Y.append(point)
+		point_c+=point
+		print point
+		if point_c>3000 :
+			terminate=1
+		
+		
+		k=cv2.waitKey(20)
 		if k==27:
 			break
-		elif k==-1: 
-			continue
+		#elif k== -1 :
+		#	move=0
+		#elif k== 63235 :
+		#	move=1
+		#elif k== 63234 :
+		#	move=-1	
+		#else :
+		#	print k
+		
 
-		cv2.destroyAllWindows()
 
+		if terminate==1 :
+			break
+	cv2.destroyAllWindows()
+	if point_c<3000 :
+		j=0
+		while j<500 :
+			frame=PIL_background.copy()
+			frame.paste(road, (200,0))
+			bug=bug_o.copy()
+			if flag_t1==1 :
+				frame.paste(trick, (t1x,t1y),trick)
+
+			if flag_t2==1 :
+				frame.paste(trick, (t2x,t2y),trick)
+
+			if flag_t3==1 :
+				frame.paste(trick, (t3x,t3y),trick)
+
+			if flag_t4==1 :
+				frame.paste(trick, (t4x,t4y),trick)
+
+			if flag_t1==-1 :
+				frame.paste(gold, (t1x,t1y),gold)
+
+			if flag_t2==-1 :
+				frame.paste(gold, (t2x,t2y),gold)
+
+			if flag_t3==-1 :
+				frame.paste(gold, (t3x,t3y),gold)
+
+			if flag_t4==-1 :
+				frame.paste(gold, (t4x,t4y),gold)
+
+
+		
+			frame.paste(bug, (ux,uy),bug)
+		
+
+			frame= cv2.cvtColor(np.array(frame), cv2.COLOR_RGB2BGR)
+			font = cv2.FONT_HERSHEY_SIMPLEX
+
+		
+			cv2.putText(frame,'Time:' +str(i) ,(10,30), font, 1,(255,255,255),2)
+			cv2.putText(frame,'Score : '+ str(point_c) +' Move:' +str(move) ,(10,60), font, 1,(0,255,255),2)
+			cv2.putText(frame,'Obstacle avoided :'+ str(obs_a) + '/' + str(obs_a+obs_h) + ' Obstacle Hitted :' + str(obs_h) + '/' + str(obs_a+obs_h) ,(10,90), font, 1,(255,0,255),2)
+			cv2.putText(frame,'Coin collected :'+ str(coin_c) + '/' + str(coin)  +' Coin Missed :'+ str(coin_m) + '/' + str(coin) ,(10,120), font, 1,(255,255,0),2)
+			cv2.putText(frame,'Toatled' ,(100,500), font, 6,(0,0,255),8)
+			j+=1
+			cv2.imshow('Gold Rush',frame)
+
+			k=cv2.waitKey(10)
+			if k==27:
+				break
+			cv2.destroyAllWindows()
+	else :
+		j=0
+		while j<200 :
+			frame=PIL_background.copy()
+			frame.paste(road, (200,0))
+			bug=bug_o.copy()
+			if flag_t1==1 :
+				frame.paste(trick, (t1x,t1y),trick)
+
+			if flag_t2==1 :
+				frame.paste(trick, (t2x,t2y),trick)
+
+			if flag_t3==1 :
+				frame.paste(trick, (t3x,t3y),trick)
+
+			if flag_t4==1 :
+				frame.paste(trick, (t4x,t4y),trick)
+
+			if flag_t1==-1 :
+				frame.paste(gold, (t1x,t1y),gold)
+
+			if flag_t2==-1 :
+				frame.paste(gold, (t2x,t2y),gold)
+
+			if flag_t3==-1 :
+				frame.paste(gold, (t3x,t3y),gold)
+
+			if flag_t4==-1 :
+				frame.paste(gold, (t4x,t4y),gold)
+
+
+		
+			frame.paste(bug, (ux,uy),bug)
+		
+
+			frame= cv2.cvtColor(np.array(frame), cv2.COLOR_RGB2BGR)
+			font = cv2.FONT_HERSHEY_SIMPLEX
+
+		
+			cv2.putText(frame,'Time:' +str(i)  ,(10,30), font, 1,(255,255,255),2)
+			cv2.putText(frame,'Score : '+ str(point_c) +' Move:' +str(move) ,(10,60), font, 1,(0,255,255),2)
+			cv2.putText(frame,'Obstacle avoided :'+ str(obs_a) + '/' + str(obs_a+obs_h) + ' Obstacle Hitted :' + str(obs_h) + '/' + str(obs_a+obs_h) ,(10,90), font, 1,(255,0,255),2)
+			cv2.putText(frame,'Coin collected :'+ str(coin_c) + '/' + str(coin)  +' Coin Missed :'+ str(coin_m) + '/' + str(coin) ,(10,120), font, 1,(255,255,0),2)
+			cv2.putText(frame,'Victory' ,(100,500), font, 6,(0,255,0),8)
+			j+=1
+			cv2.imshow('Gold Rush',frame)
+			k=cv2.waitKey(50)
+			if k==27:
+				break
+			cv2.destroyAllWindows()
+	
 	return 0
+
+
+
+
+
+def state(Display,model,iterations,species) :
+	#fourcc = cv2.cv.CV_FOURCC(*'XVID')
+	#out = cv2.VideoWriter('Video/' + str(species) + '.avi', -1, 20.0, (1000,800))
+	terminate_1=0
+	terminate=0
+	move_s=[]
+	point_c=0
+	Y=[]
+	move=0
+	ft=40
+	fire_timer=0
+	obs_h=int(0)
+	obs_a=0
+	coin_c=0
+	coin=0
+	coin_m=0
+	pygame.init()
+	pygame.mixer.init()
+	#coinm=pygame.mixer.music.load('coin.mp3')
+	#coinm = pygame.mixer.Sound('sounds/coin.wav')
+
+
+
+	flag_t1=0
+	flag_t2=0
+	flag_t3=0
+	flag_t4=0
+	flag_star=0
+
+	K=4
+	A=21
+
+	ux=200 + 100*int(random.random() * 4)
+	uy=760
+	pp=int(random.random() * 4)
+	if pp==1 :
+		flag_t1=1
+	if pp==2 :
+		flag_t2=1
+	if pp==3 :
+		flag_t3=1
+	if pp==0 :
+		flag_t4=1
+
+
+
+	t1x=200 
+	t1y=0
+
+	t2x=300 
+	t2y=0
+
+	t3x=400 
+	t3y=0
+
+	t4x=500 
+	t4y=0
+
+	rand_time= A + int(random.random() * K)
+	X=np.zeros((1,1,y_v,x_v))
+	move_s.append(0)
+	Y.append(0.1)
+
+	i=0
+	while True:
+
+		i+=1
+		point=0.1
+
+		frame=PIL_background.copy()
+		if i%2 == 1 :
+			frame.paste(road, (200,0))
+		else :
+			frame.paste(road2, (200,0))
+
+		bug=bug_o.copy()
+		if flag_t1==1 :
+			frame.paste(trick, (t1x,t1y),trick)
+
+		if flag_t2==1 :
+			frame.paste(trick, (t2x,t2y),trick)
+
+		if flag_t3==1 :
+			frame.paste(trick, (t3x,t3y),trick)
+
+		if flag_t4==1 :
+			frame.paste(trick, (t4x,t4y),trick)
+
+		if flag_t1==-1 :
+			frame.paste(gold, (t1x,t1y),gold)
+
+		if flag_t2==-1 :
+			frame.paste(gold, (t2x,t2y),gold)
+
+		if flag_t3==-1 :
+			frame.paste(gold, (t3x,t3y),gold)
+
+		if flag_t4==-1 :
+			frame.paste(gold, (t4x,t4y),gold)
+
+
+		
+		frame.paste(bug, (ux,uy),bug)
+		x2i=frame.resize((y_v,x_v),Image.ANTIALIAS)
+		frame.paste(x2i, (600,0))
+		if fire_timer!=0 :
+			if (i/2)%2 == 1 :
+				frame.paste(fire1, (ux,uy-40),fire1)
+			else :
+				frame.paste(fire2, (ux,uy-40),fire2)
+
+
+
+		frame= cv2.cvtColor(np.array(frame), cv2.COLOR_RGB2BGR)
+		x2i= cv2.cvtColor(np.array(x2i), cv2.COLOR_BGR2GRAY)
+		#print x2i.shape
+		xi=np.reshape(x2i,(1,1,y_v,x_v))
+		val=int(point)
+		font = cv2.FONT_HERSHEY_SIMPLEX
+
+		qval=model.predict_on_batch(xi)
+		move=np.argmax(qval)-1
+		
+		X=np.concatenate((X,xi),axis=0)
+		move_s.append(move)
+		cv2.putText(frame,'Time:' +str(i) + ' Generation :' + str(species),(10,30), font, 1,(255,255,255),2)
+		cv2.putText(frame,'Score : '+ str(point_c) +' Move:' +str(move) ,(10,60), font, 1,(0,255,255),2)
+		cv2.putText(frame,'Obstacle avoided :'+ str(obs_a) + '/' + str(obs_a+obs_h) + ' Obstacle Hitted :' + str(obs_h) + '/' + str(obs_a+obs_h) ,(10,90), font, 1,(255,0,255),2)
+		cv2.putText(frame,'Coin collected :'+ str(coin_c) + '/' + str(coin)  +' Coin Missed :'+ str(coin_m) + '/' + str(coin) ,(10,120), font, 1,(255,255,0),2)
+		#cv2.putText(frame,'Current Reward: ' + str(point) ,(10,150), font, 1,(255,0,0),2)
+
+
+		if Display==True :
+			cv2.imshow('Gold Rush',frame)
+		
+
+
+		print qval, move, 
+		if move==1 :
+			ux+=100
+		if move==-1 :
+			ux-=100
+			
+
+		if ux<200 :
+			terminate=1
+			point=-100
+		elif ux>500 :
+			terminate=1
+			point=-100
+			
+	
+		if abs(flag_t1)==1 :
+			t1y=t1y+20
+
+		if abs(flag_t2)==1 :
+			t2y=t2y+20
+
+		if abs(flag_t3)==1 :
+			t3y=t3y+20
+
+		if abs(flag_t4)==1 :
+			t4y=t4y+20
+
+
+		if abs(flag_t1)==1 :
+			if abs(ux-t1x)<100 :
+				if (uy-t1y)<100 and (t1y-uy)<=0 :
+					#print '21'
+					terminate=int( 0.5 + 0.5*(flag_t1) )
+					point= -75*flag_t1 + 25
+					if flag_t1==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t1==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t1=0
+					t1y=0
+					
+				
+
+				if (t1y-uy)<240 and (uy-t1y)<=0 :
+					#print '22'
+					terminate=int( 0.5 + 0.5*(flag_t1) )
+					point= -75*flag_t1 + 25
+					if flag_t1==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t1==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t1=0
+					t1y=0
+
+
+
+		if abs(flag_t2)==1 :
+			if abs(ux-t2x)<100 :
+				if (uy-t2y)<100 and (t2y-uy)<=0 :
+					#print '21'
+					terminate=int( 0.5 + 0.5*(flag_t2) )
+					point= -75*flag_t2 + 25
+					if flag_t2==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t2==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t2=0
+					t2y=0
+
+				if (t2y-uy)<240 and (uy-t2y)<=0 :
+					#print '22'
+					terminate=int( 0.5 + 0.5*(flag_t2) )
+					point= -75*flag_t2 + 25
+					if flag_t2==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t2==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t2=0
+					t2y=0
+
+
+		if abs(flag_t3)==1 :
+			if abs(ux-t3x)<100 :
+				if (uy-t3y)<100 and (t3y-uy)<=0 :
+					#print '21'
+					terminate= int( 0.5 + 0.5*(flag_t3) )
+					point= -75*flag_t3 + 25	
+					if flag_t3==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t3==1 :
+						obs_h+=1
+						fire_timer=14
+						crash.play()
+					flag_t3=0
+					t3y=0
+
+
+				if (t3y-uy)<240 and (uy-t3y)<=0 :
+					#print '22'
+					terminate=int( 0.5 + 0.5*(flag_t3) )
+					point= -75*flag_t3 + 25
+					if flag_t3==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t3==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t3=0
+					t3y=0
+
+
+		if abs(flag_t4)==1 :
+			if abs(ux-t4x)<100 :
+				if (uy-t4y)<100 and (t4y-uy)<=0 :
+					#print '21'
+					terminate=int( 0.5 + 0.5*(flag_t4) )
+					point= -75*flag_t4 + 25
+					if flag_t4==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t4==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t4=0
+					t4y=0
+
+
+				if (t4y-uy)<240 and (uy-t4y)<=0 :
+					#print '22'
+					terminate=int( 0.5 + 0.5*(flag_t4) )
+					point= -75*flag_t4 + 25
+					if flag_t4==-1 :
+						coin_c+=1
+						coinm.play()
+					if flag_t4==1 :
+						obs_h+=1
+						fire_timer=ft
+						crash.play()
+					flag_t4=0
+					t4y=0
+
+			
+			
+
+		if abs(flag_t1)==1 :
+			if t1y>1000 :
+				if (flag_t1)==-1:
+					point=-40
+					coin_m+=1
+				if flag_t1==1 :
+					obs_a+=1
+				t1y=0
+				flag_t1=0
+				
+
+		if abs(flag_t2)==1 :
+			if t2y>1000 :
+				if (flag_t2)==-1:
+					point=-40
+					coin_m+=1
+				if flag_t2==1 :
+					obs_a+=1
+				t2y=0
+				flag_t2=0
+				
+
+		if abs(flag_t3)==1 :
+			if t3y>1000 :
+				if (flag_t3)==-1:
+					point=-40
+					coin_m+=1
+				if flag_t3==1 :
+					obs_a+=1
+				t3y=0
+				flag_t3=0
+				
+
+		if abs(flag_t4)==1 :
+			if t4y>1000 :
+				if (flag_t4)==-1:
+					point=-40
+					coin_m+=1
+				if flag_t4==1 :
+					obs_a+=1
+				t4y=0
+				flag_t4=0
+				
+		
+
+		if abs(flag_t1)==1 :
+			if rand_time==0 :
+				probabilty=int(random.random()*3)
+				if flag_t3==0 and probabilty==0 :
+					flag_t3=1
+					rand_time= A + int(random.random() * K)
+				if flag_t2==0 and probabilty==1 :
+					flag_t2=1
+					rand_time= A + int(random.random() * K)
+				if flag_t4==0 and probabilty==2 :
+					flag_t4=1
+					rand_time= A + int(random.random() * K)
+
+		if abs(flag_t2)==1 :
+			if rand_time==0 :
+				probabilty=int(random.random()*3)
+				if flag_t3==0 and probabilty==0 :
+					flag_t3=1
+					rand_time= A + int(random.random() * K)
+				if flag_t1==0 and probabilty==1 :
+					flag_t1=1
+					rand_time= A + int(random.random() * K)
+				if flag_t4==0 and probabilty==2 :
+					flag_t4=1
+					rand_time= A + int(random.random() * K)
+
+
+		if abs(flag_t3)==1 :
+			if rand_time==0 :
+				probabilty=int(random.random()*3)
+				if flag_t1==0 and probabilty==0 :
+					flag_t1=1
+					rand_time= A + int(random.random() * K)
+				if flag_t2==0 and probabilty==1 :
+					flag_t2=1
+					rand_time= A + int(random.random() * K)
+				if flag_t4==0 and probabilty==2 :
+					flag_t4=1
+					rand_time= A + int(random.random() * K)
+
+		if abs(flag_t4)==1 :
+			if rand_time==0 :
+				probabilty=int(random.random()*3)
+				if flag_t3==0 and probabilty==0 :
+					flag_t3=1
+					rand_time= A + int(random.random() * K)
+				if flag_t2==0 and probabilty==1 :
+					flag_t2=1
+					rand_time= A + int(random.random() * K)
+				if flag_t1==0 and probabilty==2 :
+					flag_t1=1
+					rand_time= A + int(random.random() * K)
+
+
+		if flag_star==0 :
+			prop_star = int(random.random() * 4)
+			if prop_star==0:
+				flag_star=1
+				n = 1 + int(random.random() * 4)
+				if n==1 and flag_t1==0:
+					flag_t1=-1
+					coin+=1
+				if n==2 and flag_t2==0:
+					flag_t2=-1
+					coin+=1
+				if n==3 and flag_t3==0:
+					flag_t3=-1
+					coin+=1
+				if n==4 and flag_t4==0:
+					flag_t4=-1
+					coin+=1
+
+		if flag_t1!=-1 and flag_t2!=-1 and flag_t3!=-1 and  flag_t4!=-1 :
+			flag_star=0
+
+
+
+		if flag_t1==0 and flag_t2==0 and flag_t3==0 and flag_t4==0 :
+			pp=int(random.random() * 4)
+			obs+=1
+			if pp==1 :
+				flag_t1=1
+			if pp==2 :
+				flag_t2=1
+			if pp==3 :
+				flag_t3=1
+			if pp==0 :
+				flag_t4=1
+			rand_time= A + int(random.random() * K)
+
+
+
+
+		if rand_time !=0 :
+			rand_time-=1
+		
+
+		Y.append(point)
+		point_c+=point
+		print point
+		
+		if(abs(point_c)>1000):
+			terminate=1
+
+		k=cv2.waitKey(20)
+		if k==27:
+			break
+		#elif k== -1 :
+		#	move=0
+		#elif k== 63235 :
+		#	move=1
+		#elif k== 63234 :
+		#	move=-1	
+		#else :
+		#	print k
+		
+
+
+		if terminate==1 :
+			break
+	cv2.destroyAllWindows()
+
+	return X,Y,move_s,terminate_1
+
+
